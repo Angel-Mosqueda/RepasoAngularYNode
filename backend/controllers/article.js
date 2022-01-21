@@ -5,40 +5,40 @@ var Article = require('../models/article');
 
 var controller = {
 
-    datosCurso: (req, res) =>{
+    datosCurso: (req, res) => {
         var hola = req.body.hola;
 
         return res.status(200).send({
             curso: 'Master en Frameworks JS',
-            autor:'Angel',
-            url:'youtube.com',
+            autor: 'Angel',
+            url: 'youtube.com',
             hola
         });
     },
 
-    test: (req,res)=>{
+    test: (req, res) => {
         return res.status(200).send({
             message: 'Soy la accion test de mi controlador de articulos'
         })
     },
 
-    save: (req, res) =>{
+    save: (req, res) => {
         //Reccoger los parametros por post
         var params = req.body;
         console.log(params);
         //Validar datos (validator)
-        try{
+        try {
             var validate_title = !validator.isEmpty(params.title);
             var validate_content = !validator.isEmpty(params.content);
-        }catch(err){
+        } catch (err) {
             return res.status(404).send({
                 status: 'error',
-                message:'Faltan datos por enviar !!!'
+                message: 'Faltan datos por enviar !!!'
             })
         }
 
-        if(validate_title && validate_content){
-           //Crear el objeto a guardar
+        if (validate_title && validate_content) {
+            //Crear el objeto a guardar
             var article = new Article();
 
             //Asignar valores
@@ -47,11 +47,11 @@ var controller = {
             article.image = null;
 
             //Guardar el articulo
-            article.save((err, articleStored)=>{
-                if(err || !articleStored){
+            article.save((err, articleStored) => {
+                if (err || !articleStored) {
                     return res.status(404).send({
                         status: 'error',
-                       message:'El articulo no se ha guardado :/'
+                        message: 'El articulo no se ha guardado :/'
                     });
                 }
                 //Devolver una respuesta
@@ -61,31 +61,40 @@ var controller = {
                 });
             });
 
-            
-        }else{
+
+        } else {
             return res.status(200).send({
                 status: 'error',
-               message:'Los datos no son validos'
+                message: 'Los datos no son validos'
             });
         }
-        
+
     },
 
-    getArticles: (req, res) =>{
-        //Find
-        Article.find({}).sort('_id').exec((err,articles)=>{
+    getArticles: (req, res) => {
 
-            if(err){
+        var query = Article.find({});
+
+        var last = req.params.last;
+
+        if (last || last != undefined) {
+            query.limit(5);
+        }
+
+        //Find
+        query.sort('-_id').exec((err, articles) => {
+
+            if (err) {
                 return res.status(500).send({
                     status: 'error',
-                    message:'Error al devolver los articulos'
+                    message: 'Error al devolver los articulos'
                 });
             }
 
-            if(!articles){
+            if (!articles) {
                 return res.status(404).send({
                     status: 'error',
-                    message:'No hay articulos para mostrar'
+                    message: 'No hay articulos para mostrar'
                 });
             }
 
@@ -94,9 +103,39 @@ var controller = {
                 articles
             });
         });
+    },
 
-        
+    getArticle: (req, res) => {
+        //Recoger el id de la url
+        var articleId = req.params.id;
+
+        //Comprobar que existe
+        if (!articleId || articleId == null) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'No existe el articulo'
+            });
+        }
+
+        //Buscar el articulo
+        Article.findById(articleId, (err, article) => {
+
+            if (err || !article) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'No existe el articulo'
+                });
+            }
+
+            //Devolver en JSON
+            return res.status(200).send({
+                status: 'succes',
+                article
+            });
+        })
+
     }
+
 
 }//end controller
 
